@@ -3,7 +3,7 @@
 
 		<script src="http://cloud.github.com/downloads/processing-js/processing-js/processing-1.4.1.min.js"></script>
 				<script type="text/processing" data-processing-target="mycanvas">
-			var road, chara, time, income, costOfLiving, sceneTime, keyTouch, coinTime, youLost, startGame, gameState, coneTouch; 
+			var road, chara, time, income, costOfLiving, sceneTime, keyTouch, coinTime, youLost, startGame, gameState, coneTouch, incTime;
 			var townhouses = {};
 			var cones = {};
 			var condos = {};
@@ -21,11 +21,12 @@
 	time = millis();
 	sceneTime = millis();
 	coinTime = millis(); 
+	incTime = millis(); 
 	keyTouch = false; 
 	youLost = false; 
 	coneTouch = false; 
 	road = new Road(0, 450);
-	chara = new Character(60, 410);
+	chara = new Character(80, 410);
 	var town = 0; 
 	for(var k = 0; k < 8; k++)
 	{
@@ -98,6 +99,7 @@ void draw()
 				income+= 4; 
 				
 			}
+			
 		}
 		
 		if(millis() - sceneTime >= 10000)
@@ -106,7 +108,7 @@ void draw()
 			{
 				cones[c].drawCone();
 				cones[c].moveCone(); 
-				if(cones[c].xPosition - chara.xPos === 2 && (cones[c].yPosition-70) === chara.yPos)
+				if(Math.abs(cones[c].xPosition - chara.xPos <= 2) && (cones[c].yPosition-70) === chara.yPos && coneTouch === false)
 				{
 					income -= 3;
 					coneTouch = true;  
@@ -115,12 +117,16 @@ void draw()
 					//println("CONES  " + cones[c].yPosition);
 					
 				}
+				
+				
 			} 
 		}
 		if(coneTouch === true)
 		{
 			chara.drawMinus(); 
 		}
+		
+		
 		chara.drawCharacter();
 		chara.jump(); 
 		//println("Character Yposition  " + chara.y);
@@ -139,12 +145,27 @@ void draw()
 				time = millis(); 
 			}
 			
-			if(millis() - coinTime >= 4000)
+			if(millis() - coinTime >= 2000)
 			{
-				coins.push(new Coin(random(800,850), 380, -2));
+				coins.push(new Coin(random(800,850), 380, coins[0].speedX));
 				coinTime = millis(); 
 			}
-			if(income <= costOfLiving * (3/5))
+			if(millis() - incTime >= 5000)
+			{
+				for(var c = 0; c < cones.length; c++)
+						{
+						cones[c].changeConeSpeed(); 
+						//println("Changed Cone  " + c); 
+						}
+				for(var p = 0; p < coins.length; p++)
+						{
+						coins[p].changeCoinSpeed();
+						//println("CHANGED COIN " + p);
+						}
+						incTime = millis();		
+			}		
+			
+			if(income <= costOfLiving * (2/3))
 			{
 				///alert("YOUR INCOME DROPPED TOO MIUCH!!!! SORRY you have been DISPLACED!!!!");
 					background(181, 205, 23);
@@ -298,7 +319,7 @@ class Character
 		
 		//waitasec();
 		//falling
-		if(millis() - time >= 1470)
+		if(millis() - time >= 1000)
 		{
 			if(jumpState == 2 && yPos <= height)
 			{
@@ -328,46 +349,6 @@ class Character
 		
 }
 
-
-class Box 
-		{
-			var xPosition;
-			var yPosition;
-			var speedX;
-				
-			Box(xPos, yPos, xSpeed)
-			{
-				xPosition = xPos;
-				yPosition = yPos;
-				speedX = xSpeed;
-			}
-			
-		void drawBox()
-			{
-				noStroke();
-				fill(230, 186, 76);
-				rect(xPosition+10,yPosition+310, 60,60); //the actual yellow box
-				//arrow for box
-				fill(18, 1, 1);
-				rect(xPosition+35,yPosition+340,10,30); //arrow's stick
-				triangle(xPosition+25,yPosition+350,xPosition+55,yPosition+350,xPosition+40,yPosition+330); //triangle of the arrow
-			}
-			
-			
-			void moveBox()
-			{
-				xPosition = xPosition + speedX;
-				
-				if(xPosition < -40)//when the house is off the screen
-				{
-				xPosition= 850;//move it to the right of the screen
-				}
-					
-			}
-		
-		
-		}
-		
 		class Townhouse 
 		{
 			var xPosition;
@@ -452,44 +433,6 @@ class Box
 			}
 		}	
 		
-		class Car
-			{
-			var r;
-			var g;
-			var b;
-			var Xpos;
-			var Ypos;
-			var speedX;
-			Car(color,xp,yp,sp)
-			{
-				r= color[0];
-				g= color[1];
-				b= color[2];
-				Xpos= xp;
-				Ypos= yp;
-				speedX= sp;
-			}
-		
-			void drawCar()
-			{
-			noStroke();
-			fill(r,g,b);
-			rect(Xpos,Ypos,100,30);
-			arc(Xpos+50,Ypos-7,75,70,180,360);
-			fill(128,128,128);
-			ellipse(Xpos+20,Ypos+30,25,25);
-			ellipse(Xpos+80,Ypos+30,25,25);
-			}
-		
-			void moveCar()
-			{
-			Xpos = Xpos+ speedX;
-				if(Xpos < -130)
-				{
-				  Xpos = 880;
-				}
-			}
-		}
 		
 	class Coin 
 		{
@@ -524,6 +467,12 @@ class Box
 				}
 					
 			}
+			
+			void changeCoinSpeed()
+			{
+				speedX -= .2;
+			}
+			
 		
 		}
 		class Condo{
@@ -609,7 +558,10 @@ class Box
 				{
 				xPosition=850;//move it to the right of the screen
 				}
-					
+			}
+			void changeConeSpeed()
+			{
+				speedX -= .3;
 			}
 		
 		
