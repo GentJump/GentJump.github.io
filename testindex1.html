@@ -145,7 +145,7 @@ void draw()
 				time = millis(); 
 			}
 			
-			if(millis() - coinTime >= 2000)
+			if(millis() - coinTime >= 1000)
 			{
 				coins.push(new Coin(random(800,850), 380, coins[0].speedX));
 				coinTime = millis(); 
