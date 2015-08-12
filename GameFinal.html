@@ -3,7 +3,7 @@
 
 		<script src="http://cloud.github.com/downloads/processing-js/processing-js/processing-1.4.1.min.js"></script>
 				<script type="text/processing" data-processing-target="mycanvas">
-			var road, chara, time, income, costOfLiving, sceneTime, keyTouch, coinTime, youLost, startGame, gameState, coneTouch, incTime;
+			var road, chara, time, income, costOfLiving, sceneTime, keyTouch, coinTime, youLost, startGame, gameState, coneTouch, incTime, hitTime, alarmOn, coneTime;
 			var townhouses = {};
 			var cones = {};
 			var condos = {};
@@ -22,9 +22,12 @@
 	sceneTime = millis();
 	coinTime = millis(); 
 	incTime = millis(); 
+	hitTime = millis();
+	
 	keyTouch = false; 
 	youLost = false; 
 	coneTouch = false; 
+	alarmOn = false; 
 	road = new Road(0, 450);
 	chara = new Character(80, 410);
 	var town = 0; 
@@ -35,7 +38,7 @@
 		
 	}
 	var cone = 0; 
-	for(var l =0; l < 5; l++)
+	for(var l =0; l < 4; l++)
 	{
 		cones.push(new Cone(cone, 480, -2));
 		cone += 180;
@@ -117,40 +120,57 @@ void draw()
 			{
 				cones[c].drawCone();
 				cones[c].moveCone(); 
-				if(Math.abs(cones[c].xPosition - chara.xPos <= 2) && (cones[c].yPosition-70) === chara.yPos && coneTouch === false)
+				if(Math.abs(cones[c].xPosition - chara.xPos <= 2)&& ((cones[c].yPosition-70) === chara.yPos) && coneTouch === false)
 				{
 					income -= 3;
 					coneTouch = true;  
+					coneTime = millis();
 					//println("CONE");
 					//println(cones.length);
 					//println("CONES  " + cones[c].yPosition);
 					
 				}
 				
-				
 			} 
 		}
+		
 		if(coneTouch === true)
 		{
-			chara.drawMinus(); 
+			 alarmOn = true; 
+			 //chara.drawMinus(); 
+			 if(millis() - coneTime >= 500)
+			{
+				coneTouch = false; 
+				coneTime = millis(); 
+			}
+			 
+			 
 		}
-		
-		
+		if(alarmOn === true)
+		{
+			 
+			chara.drawMinus();
+			if(millis() - hitTime >= 1500)
+			{
+				alarmOn = false; 
+				//println("CONE TOUCH RESET");
+				hitTime = millis();
+			}	
+			
+		}
+
 		chara.drawCharacter();
 		chara.jump(); 
 		//println("Character Yposition  " + chara.y);
 		fill(255,255,255);
-		textFont("monospace", 25);
+		textFont("cursive", 25);
 		text("Income: " + income, 530, 30); 
 		text("Cost Of Living: " + costOfLiving, 530, 60);
 
 			if(millis() - time >= 2000)
 			{
 				costOfLiving += 3; 
-				if(coneTouch === true)
-				{
-					coneTouch = false;
-				}
+				
 				time = millis(); 
 			}
 			
@@ -334,10 +354,12 @@ class Character
 			{
 				yPos = inity;
 				keyTouch = false; 
+				
 			}
 			else if (yPos >= height)
 			{
 				jumpState = 0;
+				
 				
 			}
 		time = millis(); 
@@ -345,10 +367,21 @@ class Character
 	}
 	void drawMinus()
 	{
-		fill(255,0,0);
-		rect(600, 150, 104, 40);
-		fill(255,255,255);
-		text("YOU HIT A CONE!", 600, 170);
+		strokeWeight(4); 
+		stroke(240, 220, 43); 
+		line(292, 123, 151, 123);
+		line(292, 153, 151, 153);
+		line(294, 152, 294, 123);
+		line(149, 152, 149, 123);
+
+		noStroke(); 
+		fill(255, 102, 0);
+		rect(151, 124, 141, 28);
+		fill(255, 255, 255);
+		var c= createFont("cursive");
+		textFont(c,15);
+		text("YOU HIT A CONE", 156, 145); 
+		textFont(c, 20);
 	
 	}
 	void resetTime()
